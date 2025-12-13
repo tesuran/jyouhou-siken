@@ -10,7 +10,11 @@ import os
 import concurrent.futures
 import socket
 from urllib.parse import urljoin
-from pyngrok import ngrok  # 外部アクセス用
+
+try:
+    from pyngrok import ngrok  # 外部アクセス用
+except ImportError:
+    ngrok = None
 
 # page config
 st.set_page_config(page_title="社労士過去問スクレイパー", page_icon="📝")
@@ -107,17 +111,22 @@ with st.sidebar.expander("外部公開設定 (ngrok)"):
 
             try:
                 # ngrok設定
-                ngrok.set_auth_token(auth_token)
+                if ngrok:
+                    ngrok.set_auth_token(auth_token)
 
-                # 既存のトンネルを確認して閉じる (再起動時用)
-                tunnels = ngrok.get_tunnels()
-                for t in tunnels:
-                    ngrok.disconnect(t.public_url)
+                    # 既存のトンネルを確認して閉じる (再起動時用)
+                    tunnels = ngrok.get_tunnels()
+                    for t in tunnels:
+                        ngrok.disconnect(t.public_url)
 
-                # トンネル開始 (ポート8501)
-                public_url = ngrok.connect(8501).public_url
-                st.session_state["ngrok_url"] = public_url
-                st.success("接続しました！")
+                    # トンネル開始 (ポート8501)
+                    public_url = ngrok.connect(8501).public_url
+                    st.session_state["ngrok_url"] = public_url
+                    st.success("接続しました！")
+                else:
+                    st.error(
+                        "現在この環境ではngrokライブラリが利用できません(requirements.txtを確認してください)"
+                    )
 
             except Exception as e:
                 st.error(f"接続エラー: {e}")
@@ -137,7 +146,8 @@ with st.sidebar.expander("外部公開設定 (ngrok)"):
         st.image(qr_ngrok, caption="外出先からスキャン")
 
         if st.button("切断する"):
-            ngrok.kill()
+            if ngrok:
+                ngrok.kill()
             del st.session_state["ngrok_url"]
             st.rerun()
 
