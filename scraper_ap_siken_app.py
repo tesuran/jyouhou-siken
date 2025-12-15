@@ -15,6 +15,25 @@ st.set_page_config(
 
 st.title("💻 応用情報技術者 過去問スクレイパー & 学習")
 
+# QRコード生成 (サイドバー)
+st.sidebar.markdown("---")
+st.sidebar.header("📱 スマホで学習")
+link_url = st.sidebar.text_input(
+    "アプリのURLを入力:", placeholder="https://....streamlit.app"
+)
+if link_url:
+    import qrcode
+    from io import BytesIO
+
+    # QRコード生成
+    img = qrcode.make(link_url)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    st.sidebar.image(
+        buffer, caption="スマホで読み取ってください", use_column_width=True
+    )
+
+
 # 定数定義
 SAVE_FILE = "ap_siken_data.json"
 BASE_URL = "https://www.ap-siken.com"
